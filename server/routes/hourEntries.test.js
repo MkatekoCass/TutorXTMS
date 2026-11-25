@@ -12,6 +12,7 @@ jest.mock("../supabaseClient", () => ({
 }));
 
 const hourEntriesRouter = require("./hourEntries");
+const { sessionClock } = require("../loggingWindow");
 
 function buildApp() {
   const app = express();
@@ -20,7 +21,7 @@ function buildApp() {
   return app;
 }
 
-// ---------- clock helpers (local time, mirroring the route) ----------
+// ---------- clock helpers (South African time, mirroring the route) ----------
 
 const DAY_NAMES = [
   "Sunday",
@@ -57,17 +58,16 @@ function clockTime(minutes) {
 // The next occurrence of a weekday strictly after today, so tests that need
 // "some other day" get a real future date without freezing the clock.
 function nextWeekdayDate(dayName) {
-  const target = DAY_NAMES.indexOf(dayName);
-  const date = new Date();
   for (let i = 1; i <= 7; i += 1) {
-    date.setDate(date.getDate() + 1);
-    if (date.getDay() === target) break;
+    const date = addDays(TODAY, i);
+    if (weekdayOf(date) === dayName) return date;
   }
-  return toDateStr(date);
+  return addDays(TODAY, 7);
 }
 
-const TODAY = toDateStr(new Date());
-const NOW_MINUTES = new Date().getHours() * 60 + new Date().getMinutes();
+// The route reads "now" in South African time, so the fixtures must too —
+// otherwise they drift two hours on a UTC machine like CI.
+const { date: TODAY, minutes: NOW_MINUTES } = sessionClock();
 // A lab window that always contains "now" (30 minutes either side, clamped
 // to the day so the strings stay valid times) — lets the live-window rule
 // be exercised against the real clock without freezing time.
@@ -577,7 +577,7 @@ describe("tutor session logging rules", () => {
 
   test("rejects a date that isn't the slot's weekday", async () => {
     // A weekday two days out never carries a slot on this course.
-    const otherDay = DAY_NAMES[(new Date().getDay() + 2) % 7];
+    const otherDay = weekdayOf(addDays(TODAY, 2));
     const res = await request(buildApp())
       .post("/api/hour-entries")
       .send({
