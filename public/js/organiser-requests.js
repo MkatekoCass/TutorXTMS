@@ -135,12 +135,7 @@ function renderFiltered() {
 
 // ---------------- data loading ----------------
 
-async function loadRequests() {
-  requestListEl.innerHTML = "";
-  accessRequestListEl.innerHTML = "";
-  requestsEmptyEl.hidden = true;
-  accessRequestsEmptyEl.hidden = true;
-
+async function loadRequests({ quiet = false } = {}) {
   try {
     const reviewerId = currentUser?.id || "";
     const res = await fetch(
@@ -160,7 +155,7 @@ async function loadRequests() {
     updateChipCounts(accessStatusChipsEl, allAccessRequests);
     renderFiltered();
   } catch (err) {
-    showToast("Couldn't load organiser requests.");
+    if (!quiet) showToast("Couldn't load organiser requests.");
   }
 }
 
@@ -256,6 +251,7 @@ function showToast(message) {
 syncStatusChips(statusChipsEl, statusFilterEl);
 syncStatusChips(accessStatusChipsEl, accessStatusFilterEl);
 loadRequests();
+window.AutoSync?.start(() => loadRequests({ quiet: true }));
 
 // ---------- guided tour ----------
 // The "?" navbar button walks the two request lists. Same sessionStorage

@@ -137,3 +137,7 @@ function focusHighlightedEntry(entries) {
     listEl.innerHTML = `<p class="empty-state" style="margin: 18px 0">Couldn't load your hours right now — try again later.</p>`;
   }
 })();
+window.AutoSync?.start(async () => {
+  const entries = await getEntries();
+  renderRows(entries);
+});

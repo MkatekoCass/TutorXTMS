@@ -890,4 +890,18 @@ if (tourLink) {
     userId: currentUser.id,
     force: wantsTour,
   });
+
+  window.AutoSync?.start(async () => {
+    await Promise.allSettled([
+      fetchUpcomingSessions(currentUser.id),
+      fetchMyExcusals(currentUser.id),
+      fetchWeeklyCap(currentUser.id).then((cap) => {
+        weeklyCap = cap;
+      }),
+    ]);
+    await Promise.allSettled([renderStats(), renderTimesheetsDue()]);
+    renderMyCourses();
+    renderExcusalsList();
+    renderUpcomingSessions();
+  });
 })();

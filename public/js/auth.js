@@ -96,10 +96,12 @@ if (roleSelect) {
 // A failed load resets the flag so picking "organiser" again retries.
 let coursesRequested = false;
 
-async function loadCoursesOnce() {
-  if (coursesRequested) return;
+async function loadCoursesOnce({ refresh = false } = {}) {
+  if (coursesRequested && !refresh) return;
 
   coursesRequested = true;
+
+  const selectedCourseId = refresh ? courseSelect?.value : "";
 
   const message = document.getElementById("register-message");
 
@@ -112,6 +114,11 @@ async function loadCoursesOnce() {
       throw new Error(rows.error || "Failed to load courses");
     }
 
+    if (refresh && courseSelect) {
+      courseSelect
+        .querySelectorAll('option:not([value=""])')
+        .forEach((option) => option.remove());
+    }
     rows.forEach((row) => {
       const option = document.createElement("option");
 
@@ -121,6 +128,12 @@ async function loadCoursesOnce() {
 
       courseSelect.appendChild(option);
     });
+    if (
+      selectedCourseId &&
+      rows.some((row) => String(row.id) === selectedCourseId)
+    ) {
+      courseSelect.value = selectedCourseId;
+    }
   } catch (error) {
     console.error("Course load error:", error);
 
@@ -135,6 +148,12 @@ async function loadCoursesOnce() {
     }
   }
 }
+
+window.AutoSync?.start(() => {
+  if (roleSelect?.value === "organiser" && courseSelect) {
+    return loadCoursesOnce({ refresh: true });
+  }
+});
 
 /* =========================
    FORGOT PASSWORD

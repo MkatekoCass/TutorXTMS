@@ -78,6 +78,8 @@ async function readJson(response, failureMessage) {
 // --- Entries -------------------------------------------------------------
 
 let entriesCache = null;
+let entriesCacheAt = 0;
+const ENTRIES_CACHE_TTL_MS = 10000;
 
 async function fetchEntries() {
   const user = getCurrentUser();
@@ -90,7 +92,13 @@ async function fetchEntries() {
 }
 
 export async function getEntries() {
-  if (!entriesCache) entriesCache = await fetchEntries();
+  if (
+    !entriesCache ||
+    Date.now() - entriesCacheAt >= ENTRIES_CACHE_TTL_MS
+  ) {
+    entriesCache = await fetchEntries();
+    entriesCacheAt = Date.now();
+  }
   return [...entriesCache].sort((a, b) => a.date.localeCompare(b.date));
 }
 
@@ -103,6 +111,7 @@ export async function addEntry(entry) {
   });
   const row = await readJson(res, "Failed to add entry");
   entriesCache = null;
+  entriesCacheAt = 0;
   return fromApiEntry(row);
 }
 
@@ -114,6 +123,7 @@ export async function updateEntry(id, changes) {
   });
   const row = await readJson(res, "Failed to update entry");
   entriesCache = null;
+  entriesCacheAt = 0;
   return fromApiEntry(row);
 }
 
@@ -124,6 +134,7 @@ export async function deleteEntry(id) {
     throw new Error(body.error || "Failed to delete entry");
   }
   entriesCache = null;
+  entriesCacheAt = 0;
 }
 
 // Flags an entry whose time range overlaps another one's on the same date —

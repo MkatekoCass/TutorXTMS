@@ -31,10 +31,12 @@ function formatMoneyCompact(value) {
   return `R${Math.round(Number(value)).toLocaleString("en-ZA")}`;
 }
 
-async function loadReport() {
-  reportSectionsEl.innerHTML = `<p class="hint">Loading…</p>`;
-  emptyCopyEl.hidden = true;
-  unlinkedWarningEl.hidden = true;
+async function loadReport({ quiet = false } = {}) {
+  if (!quiet) {
+    reportSectionsEl.innerHTML = `<p class="hint">Loading…</p>`;
+    emptyCopyEl.hidden = true;
+    unlinkedWarningEl.hidden = true;
+  }
 
   const params = new URLSearchParams();
   if (fromDateEl.value) params.set("from", fromDateEl.value);
@@ -46,10 +48,12 @@ async function loadReport() {
     body = await res.json();
     if (!res.ok) throw new Error(body.error || "Failed to load report");
   } catch (err) {
-    reportSectionsEl.innerHTML = "";
-    renderSummary(null);
-    renderAllocationBars([]);
-    showToast(err.message || "Couldn't load the report right now.");
+    if (!quiet) {
+      reportSectionsEl.innerHTML = "";
+      renderSummary(null);
+      renderAllocationBars([]);
+      showToast(err.message || "Couldn't load the report right now.");
+    }
     return;
   }
 
@@ -255,6 +259,7 @@ function showToast(message) {
 }
 
 loadReport();
+window.AutoSync?.start(() => loadReport({ quiet: true }));
 
 // ---------- guided tour ----------
 // The "?" navbar button walks the report's main regions. Same sessionStorage

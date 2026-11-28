@@ -18,6 +18,7 @@
       rel="stylesheet"
     />
     <script src="../js/theme.js"></script>
+    <script src="../js/auto-sync.js"></script>
   </head>
 
   <body>
@@ -190,10 +191,11 @@
 
       let coursesRequested = false;
 
-      async function loadCoursesOnce() {
-        if (coursesRequested) return;
+      async function loadCoursesOnce({ refresh = false } = {}) {
+        if (coursesRequested && !refresh) return;
 
         coursesRequested = true;
+        const selectedCourseId = refresh ? courseSelect.value : "";
 
         try {
           const response = await fetch("/api/courses");
@@ -204,6 +206,11 @@
             throw new Error(rows.error || "Failed to load courses");
           }
 
+          if (refresh) {
+            courseSelect
+              .querySelectorAll('option:not([value=""])')
+              .forEach((option) => option.remove());
+          }
           rows.forEach((row) => {
             const option = document.createElement("option");
 
@@ -213,6 +220,12 @@
 
             courseSelect.appendChild(option);
           });
+          if (
+            selectedCourseId &&
+            rows.some((row) => String(row.id) === selectedCourseId)
+          ) {
+            courseSelect.value = selectedCourseId;
+          }
         } catch (error) {
           console.error("Course load error:", error);
 
@@ -224,6 +237,12 @@
           );
         }
       }
+
+      window.AutoSync?.start(() => {
+        if (roleSelect.value === "organiser") {
+          return loadCoursesOnce({ refresh: true });
+        }
+      });
 
       /* ================================================
          ROLE CHANGE

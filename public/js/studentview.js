@@ -1162,6 +1162,15 @@ if (tourLink) {
     refreshVolunteerState(),
   ]);
 
+  window.AutoSync?.start(async () => {
+    await Promise.allSettled([
+      renderHoursVolunteered(),
+      renderHoursMonth(),
+      renderOpenSessions(),
+      refreshVolunteerState(),
+    ]);
+  });
+
   // Arriving from a "session changed" notification — scroll to and flash
   // the session card it was about, now that the list containing it has
   // rendered.

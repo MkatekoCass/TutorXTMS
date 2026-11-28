@@ -429,6 +429,25 @@ async function loadRates() {
     const level = input.dataset.level;
     if (rates[level] != null) input.value = rates[level];
   });
+  ratesBaseline = readRateInputs();
+}
+
+let ratesBaseline = {};
+
+function readRateInputs() {
+  return Object.fromEntries(
+    [...document.querySelectorAll(".rate-input")].map((input) => [
+      input.dataset.level,
+      input.value,
+    ]),
+  );
+}
+
+function hasUnsavedRateChanges() {
+  const current = readRateInputs();
+  return Object.keys(current).some(
+    (level) => current[level] !== ratesBaseline[level],
+  );
 }
 
 document.getElementById("saveRatesBtn").addEventListener("click", async () => {
@@ -453,6 +472,7 @@ document.getElementById("saveRatesBtn").addEventListener("click", async () => {
     showToast(
       `Rates saved for ${data.updated} level${data.updated !== 1 ? "s" : ""}.`,
     );
+    ratesBaseline = readRateInputs();
     loadTutors();
   } catch (err) {
     showToast(err.message || "Failed to save rates.");
@@ -467,3 +487,10 @@ initCapField();
 loadRates();
 loadTutors();
 loadWorkload();
+window.AutoSync?.start(() =>
+  Promise.all([
+    hasUnsavedRateChanges() ? Promise.resolve() : loadRates(),
+    loadTutors(),
+    loadWorkload(),
+  ]),
+);

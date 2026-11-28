@@ -168,4 +168,5 @@ export async function initProfileTimetable(userId) {
   });
 
   await loadStatus();
+  window.AutoSync?.start(loadStatus);
 }

@@ -150,4 +150,5 @@ export async function initTranscriptUpload(userId) {
   });
 
   await loadStatus();
+  window.AutoSync?.start(loadStatus);
 }

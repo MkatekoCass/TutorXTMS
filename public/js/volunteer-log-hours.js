@@ -358,3 +358,31 @@ form.addEventListener("submit", async (event) => {
   });
   renderCourseChips([...byCourse.values()]);
 })();
+window.AutoSync?.start(async () => {
+  if (selectedCourse || selectedSession) return;
+  const res = await fetch(
+    `/api/session-excusals?coverUserId=${encodeURIComponent(currentUser.id)}`,
+  );
+  const body = await res.json();
+  if (!res.ok) throw new Error(body.error || "Couldn't load your covers.");
+  mySessions = body
+    .map(sessionFromExcusal)
+    .filter(
+      (session) =>
+        session.start &&
+        session.end &&
+        windowStatus(toDateStr(session.date), session.start, session.end) !==
+          "expired",
+    )
+    .sort(
+      (a, b) =>
+        a.date - b.date || sliceTime(a.start).localeCompare(sliceTime(b.start)),
+    );
+  const byCourse = new Map();
+  mySessions.forEach((session) => {
+    if (!byCourse.has(session.course.id)) {
+      byCourse.set(session.course.id, session.course);
+    }
+  });
+  renderCourseChips([...byCourse.values()]);
+});

@@ -419,3 +419,4 @@ async function loadAndRender() {
 }
 
 loadAndRender();
+window.AutoSync?.start(loadAndRender);

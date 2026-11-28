@@ -750,6 +750,7 @@ updateSubmitMonthHint();
   safeRenderClaim();
 
   await loadSubmissions();
+  window.AutoSync?.start(loadSubmissions);
 
   // Arriving from a "timesheet reviewed" or "timesheet due" notification —
   // scroll to and flash the month it was about.

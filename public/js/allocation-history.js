@@ -340,6 +340,7 @@ async function renderHistory() {
 }
 
 Promise.all([renderDrafts(), renderHistory()]);
+window.AutoSync?.start(() => Promise.all([renderDrafts(), renderHistory()]));
 
 // ---------- guided tour ----------
 // The "?" navbar button walks the two history lists. getSessionUserId is

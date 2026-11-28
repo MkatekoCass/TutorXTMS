@@ -834,6 +834,15 @@ function showToast(message) {
   if (highlightEntry) applyHighlight();
 })();
 
+window.AutoSync?.start(async () => {
+  await loadQueue();
+  renderCourseChips();
+  renderSummary();
+  renderUpcoming();
+  renderPast();
+  updateStatusChips();
+});
+
 // ---------- guided tour ----------
 // The "?" navbar button walks the verification flow. Same sessionStorage
 // "user" key as the board tour, so progress is keyed per user here too.

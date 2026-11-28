@@ -305,3 +305,4 @@ async function renderSessions() {
 }
 
 renderSessions();
+window.AutoSync?.start(renderSessions);

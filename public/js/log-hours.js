@@ -774,6 +774,7 @@ async function focusHighlightedEntry() {
 
 await render();
 await focusHighlightedEntry();
+window.AutoSync?.start(render);
 
 // ---------- init: load the tutor's approved modules ----------
 

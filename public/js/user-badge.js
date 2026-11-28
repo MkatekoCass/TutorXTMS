@@ -38,4 +38,17 @@
       el.hidden = false;
     });
   }
+
+  window.AutoSync?.start(async () => {
+    const response = await fetch(
+      `/api/profile/${encodeURIComponent(user.id)}`,
+    );
+    if (!response.ok) return;
+    const profile = await response.json();
+    if (!profile.name || profile.name === user.name) return;
+
+    user.name = profile.name;
+    sessionStorage.setItem("user", JSON.stringify(user));
+    if (nameEl) nameEl.textContent = user.name;
+  });
 })();

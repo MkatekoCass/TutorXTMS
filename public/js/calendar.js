@@ -1505,3 +1505,7 @@ async function loadClasses() {
 
 render();
 Promise.all([loadClasses(), fetchCourseSessions()]).then(render);
+window.AutoSync?.start(async () => {
+  await Promise.all([loadClasses(), fetchCourseSessions()]);
+  render();
+});

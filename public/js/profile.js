@@ -101,8 +101,26 @@ function renderIdentity(name, studentNumber) {
 // overwrite the stored details with an empty form before the fetch below
 // has landed; `loaded` guards the same race on the submit handler itself.
 let loaded = false;
+let profileBaseline = null;
 
-async function loadProfile() {
+function currentProfileFormValues() {
+  return {
+    firstName: firstNameField.value,
+    lastName: lastNameField.value,
+    studentNumber: studentNumberField.value,
+    cellPhone: cellPhoneField.value,
+  };
+}
+
+function hasUnsavedProfileChanges() {
+  if (!profileBaseline) return false;
+  const values = currentProfileFormValues();
+  return Object.keys(profileBaseline).some(
+    (key) => values[key] !== profileBaseline[key],
+  );
+}
+
+async function loadProfile({ quiet = false } = {}) {
   try {
     const res = await fetch(
       `/api/profile/${encodeURIComponent(currentUser.id)}`,
@@ -116,14 +134,17 @@ async function loadProfile() {
     emailField.value = body.email || "";
     studentNumberField.value = body.studentNumber || "";
     cellPhoneField.value = body.cellPhone || "";
+    profileBaseline = currentProfileFormValues();
     renderIdentity(body.name, body.studentNumber);
 
     loaded = true;
     saveBtn.disabled = false;
   } catch (err) {
-    showError(
-      `${err.message || "Couldn't load your details right now."} — reload the page to try again.`,
-    );
+    if (!quiet) {
+      showError(
+        `${err.message || "Couldn't load your details right now."} — reload the page to try again.`,
+      );
+    }
   }
 }
 
@@ -174,6 +195,7 @@ form.addEventListener("submit", async (event) => {
     // shows straight away.
     currentUser.name = body.name;
     sessionStorage.setItem("user", JSON.stringify(currentUser));
+    profileBaseline = currentProfileFormValues();
     renderIdentity(body.name, studentNumberField.value);
 
     showToast("Your details have been saved.");
@@ -186,6 +208,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 loadProfile();
+window.AutoSync?.start(() =>
+  hasUnsavedProfileChanges() ? undefined : loadProfile({ quiet: true }),
+);
 initProfileTimetable(currentUser.id);
 // The same transcript the application pages upload — organiser-profile.html
 // has no #transcript-panel, so this is a no-op there.

@@ -538,6 +538,13 @@ applyForm?.addEventListener("submit", async (e) => {
   // panel is where it's uploaded (see transcript-upload.js).
   await initTranscriptUpload(currentUser.id);
 
+  window.AutoSync?.start(async () => {
+    await Promise.allSettled([
+      fetchCourses(),
+      fetchMyApplications(currentUser.id),
+    ]);
+  });
+
   // Arriving from an "application status changed" notification — scroll to
   // and flash the application it was about.
   const highlightApplicationId = consumeQueryParam("highlightApplication");
